@@ -1,5 +1,10 @@
-import streamlit as st
-from datetime import date
+import tensorflow as tf
 
-selected_date = st.date_input("Select a date", date.today())
-st.write("You selected:", selected_date)
+# Check for GPU availability
+if tf.test.is_gpu_available():
+    print("GPU is available 🚀")
+    # TensorFlow will automatically use the GPU for computations
+    # Your neural network code goes here
+else:
+    print("No GPU found 😔")
+    # Your code will run on the CPU

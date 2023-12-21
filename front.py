@@ -4,7 +4,7 @@ import pickle
 import warnings
 warnings.filterwarnings('ignore')
 import pandas as pd
-# import pyttsx3
+import pyttsx3
 import plotly.express as px
 from datetime import datetime, timedelta
 from datetime import date
@@ -13,10 +13,8 @@ from datetime import date
 
 
 def main():
-    # global engine
-    # engine = pyttsx3.init()
-    # engine.setProperty('rate',150)
-    # engine.setProperty('volume',0.9)
+    global engine
+    
 
     #Data Loading And Preprocessing
 
@@ -89,25 +87,41 @@ def main():
     with open('final.pkl','rb') as file:
         model_final = pickle.load(file)
 
-    # number = st.text_input('Enter Date YYYY-MM-DD')
     number = st.date_input("Select Date", date.today())
+    button =st.button('Get Result')
     for_col=number
     number =str(number).replace('-','')
     past_seven_days_date = past_seven_days(number)
     predict=list(dates(number))
     result=model_final.predict([predict])
+    if button:
+        if result[0]==1:
+            st.title("Thunderstorm Alert")
+        else:
+            st.title("Not Possible To Come")
     data_for_graph(number)
 
+    # Columns For Todays Data
+    data1,data2 = st.columns(2)
 
-    if st.button('Get Result'):
+    if button:
         if result[0]==1:
-            st.title("ThunderStorm Alert ⛈️")
-            st.image('thunder.png',caption='Thunder',width=200)
+            st.title("Todays Thunderstorm Factors Level\n")
+            with data1:
+                st.image('thunder.png',caption='Thunder',width=200)
+            with data2:
+                st.write('Thunderstorm alert in effect, urging immediate safety protocols and precautionary measures for all Air Force operations and personnel.')
+                
+
         else:
-            st.write("Not Possible to come")
-            st.image('sunny.png',width=200)
+            st.title("Todays Thunderstorm Factors Level\n")
+            with data1:
+                st.image('sunny.png',width=200)
+            with data2:
+                st.write('Due to Low level of Affecting Factors So ,Today Thunderstorm Not Possible To Come')
         
         col1,col2,col3= st.columns(3)
+        st.title("Past 7 Days Predictions")
         # Columns For Past Datas
         col=['c1','c2','c3','c4','c5','c6','c7','c8']
         col = st.columns(8)
@@ -117,13 +131,12 @@ def main():
             st.write('\n\n')
             st.write('\n\n')
             st.write('\n\n')
-
-
-
             st.image('temperature.png',caption='Temperature',width=60)
             st.image('humidity.png',caption='Humidity',width=60)
             st.image('wind.png',caption='Wind ',width=60)
+        st.title('\n')
         
+
         for i in range(1,7):
             number = past_seven_days_date[i]
             predict_past=list(dates(number))
@@ -132,7 +145,7 @@ def main():
                 if result_past[0]==1:
                     st.image('thunder.png',caption='Thunder',width=100)
                     st.write('\n')
-                    st.write(for_col)
+                    st.write(number)
                     st.write(f"{predict_past[0]:.2f}")
                     st.write(f"{predict_past[1]:.2f}")
                     st.write(f"{predict_past[2]:.2f}")
@@ -141,13 +154,13 @@ def main():
                 else:
                     st.image('sunny.png',caption='Sunny',width=100)
                     st.write('\n')
-                    st.write(for_col)
+                    st.write(number)
                     st.write(f"{predict_past[0]:.2f}")
                     st.write(f"{predict_past[1]:.2f}")
                     st.write(f"{predict_past[2]:.2f}")
 
 
-
+        
         with col1:
             st.image('humidity.png',caption='Humidity',width=100)
             st.write('Humidity Level '+f"{predict[0]:.2f}")
@@ -158,14 +171,28 @@ def main():
             st.image('wind.png',caption='Wind Speed',width=100)
             st.write('Wind Speed Level '+f"{predict[0]:.2f}")
         
-        # engine.say("Thunderstorm Varuthu")
-        # engine.runAndWait()
             
         # Plotting The Graph In The Streamlit Using Past Data 
         df= pd.DataFrame(for_graph)
         df_long = pd.melt(df, id_vars='Year', var_name='Measurement', value_name='Value')
         fig = px.line(df_long, x='Year', y='Value', color='Measurement',title='Thunderstorm Factors Past 5 Years', labels={'Value': 'Value'})
         st.plotly_chart(fig)
+
+        # Voice Converter
+        if result[0]==1:
+            engine = pyttsx3.init()
+            engine.setProperty('rate',150)
+            engine.setProperty('volume',0.9)
+            engine.say("Thunderstorm alert in effect, urging immediate safety protocols and precautionary measures for all Air Force operations and personnel.")
+            engine.runAndWait()
+            engine.stop()
+        else:
+            engine = pyttsx3.init()
+            engine.setProperty('rate',150)
+            engine.setProperty('volume',0.9)
+            engine.say("Due to Low level of Affecting Factors So ,Today Thunderstorm Not Possible To Come ")
+            engine.runAndWait()
+            engine.stop()
         
 
 if __name__ == "__main__":
